@@ -192,10 +192,11 @@ function CheckoutContent() {
 
               <div className="space-y-3 mb-4">
                 {items.map(item => (
-                  <div key={item.id} className="flex items-center gap-3">
+                  <div key={item.variationId ? `${item.id}__${item.variationId}` : item.id} className="flex items-center gap-3">
                     <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover border border-zinc-100" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-zinc-900 truncate">{item.name}</div>
+                      {item.variationName && <div className="text-[10px] text-zinc-400">{item.variationName}</div>}
                       <div className="text-xs text-zinc-500">Qty: {item.quantity}</div>
                     </div>
                     <div className="text-sm font-medium text-zinc-900">₱{(item.price * item.quantity).toLocaleString()}</div>

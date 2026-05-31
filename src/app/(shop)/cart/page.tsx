@@ -47,18 +47,21 @@ export default function CartPage() {
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="flex-1">
           <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
-            {items.map(item => (
-              <div key={item.id} className="flex items-center gap-4 p-4 border-b border-zinc-100 last:border-b-0">
+            {items.map(item => {
+              const key = item.variationId ? `${item.id}__${item.variationId}` : item.id
+              return (
+              <div key={key} className="flex items-center gap-4 p-4 border-b border-zinc-100 last:border-b-0">
                 <img src={item.image} alt={item.name} className="w-20 h-20 rounded-lg object-cover border border-zinc-100" />
                 <div className="flex-1 min-w-0">
                   <Link href={`/shop/${item.id}`} className="font-semibold text-zinc-900 hover:text-sky-600 transition-colors">
                     {item.name}
                   </Link>
+                  {item.variationName && <div className="text-xs text-zinc-400 mt-0.5">{item.variationName}</div>}
                   <div className="text-sm text-zinc-500 mt-0.5">₱{item.price.toLocaleString()} / {item.unit}</div>
                   <div className="flex items-center gap-3 mt-2">
                     <div className="flex items-center border border-zinc-200 rounded-lg">
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(key, item.quantity - 1)}
                         className="w-8 h-8 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-colors"
                       >
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -67,7 +70,7 @@ export default function CartPage() {
                       </button>
                       <span className="w-10 text-center text-sm font-medium text-zinc-900">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(key, item.quantity + 1)}
                         className="w-8 h-8 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-colors"
                       >
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -76,7 +79,7 @@ export default function CartPage() {
                       </button>
                     </div>
                     <button
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(key)}
                       className="text-zinc-400 hover:text-red-500 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -89,7 +92,7 @@ export default function CartPage() {
                   <div className="font-semibold text-zinc-900">₱{(item.price * item.quantity).toLocaleString()}</div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         </div>
 

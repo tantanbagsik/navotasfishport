@@ -9,13 +9,19 @@ export interface CartItem {
   image: string
   quantity: number
   unit: string
+  variationId?: string | null
+  variationName?: string | null
+}
+
+function itemKey(item: CartItem) {
+  return item.variationId ? `${item.id}__${item.variationId}` : item.id
 }
 
 interface CartContextType {
   items: CartItem[]
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void
-  removeItem: (id: string) => void
-  updateQuantity: (id: string, qty: number) => void
+  removeItem: (key: string) => void
+  updateQuantity: (key: string, qty: number) => void
   clearCart: () => void
   itemCount: number
   subtotal: number
@@ -41,28 +47,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback((item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
     setItems(prev => {
-      const existing = prev.find(i => i.id === item.id)
-      if (existing) {
-        return prev.map(i =>
-          i.id === item.id
-            ? { ...i, quantity: i.quantity + (item.quantity || 1) }
-            : i
+      const newItem: CartItem = { ...item, quantity: item.quantity || 1 }
+      const key = itemKey(newItem)
+      const existingIndex = prev.findIndex(i => itemKey(i) === key)
+      if (existingIndex >= 0) {
+        return prev.map((i, idx) =>
+          idx === existingIndex ? { ...i, quantity: i.quantity + newItem.quantity } : i
         )
       }
-      return [...prev, { ...item, quantity: item.quantity || 1 }]
+      return [...prev, newItem]
     })
   }, [])
 
-  const removeItem = useCallback((id: string) => {
-    setItems(prev => prev.filter(i => i.id !== id))
+  const removeItem = useCallback((key: string) => {
+    setItems(prev => prev.filter(i => itemKey(i) !== key))
   }, [])
 
-  const updateQuantity = useCallback((id: string, qty: number) => {
+  const updateQuantity = useCallback((key: string, qty: number) => {
     if (qty <= 0) {
-      removeItem(id)
+      removeItem(key)
       return
     }
-    setItems(prev => prev.map(i => (i.id === id ? { ...i, quantity: qty } : i)))
+    setItems(prev => prev.map(i => (itemKey(i) === key ? { ...i, quantity: qty } : i)))
   }, [removeItem])
 
   const clearCart = useCallback(() => {

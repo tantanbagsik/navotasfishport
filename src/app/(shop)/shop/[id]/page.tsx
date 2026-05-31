@@ -15,11 +15,13 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
   const [showVideo, setShowVideo] = useState(false)
+  const [selectedVariation, setSelectedVariation] = useState<any>(null)
 
   useEffect(() => {
     if (!id) return
     getProduct(id).then(p => {
       setProduct(p)
+      setSelectedVariation(null)
       if (p?.category) {
         getProducts({ category: p.category }).then(all => {
           setRelated(all.filter((r: any) => r.id !== p.id).slice(0, 4))
@@ -32,8 +34,24 @@ export default function ProductDetailPage() {
     return <div className="max-w-7xl mx-auto px-4 py-20 text-center text-zinc-400">Loading...</div>
   }
 
+  const currentPrice = selectedVariation
+    ? Number(product.price) + Number(selectedVariation.price_adjustment)
+    : Number(product.price)
+
+  const currentImage = selectedVariation?.image || product.image
+  const currentStock = selectedVariation ? selectedVariation.stock : product.stock
+
   const handleAdd = () => {
-    addItem({ id: product.id, name: product.name, price: Number(product.price), image: product.image, unit: product.unit, quantity: qty })
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: currentPrice,
+      image: currentImage,
+      unit: product.unit,
+      quantity: qty,
+      variationId: selectedVariation?.id || null,
+      variationName: selectedVariation?.name || null,
+    })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
@@ -74,10 +92,15 @@ export default function ProductDetailPage() {
                 </video>
               )
             ) : (
-              <img src={product.image} alt={product.name} className="w-full h-80 md:h-96 object-cover" />
+              <img src={currentImage} alt={product.name} className="w-full h-80 md:h-96 object-cover" />
+            )}
+            {selectedVariation?.image && (
+              <div className="absolute bottom-3 left-3 z-10">
+                <span className="text-[10px] bg-black/50 text-white px-2 py-0.5 rounded-full">{selectedVariation.name}</span>
+              </div>
             )}
           </div>
-          </div>
+        </div>
 
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -99,12 +122,48 @@ export default function ProductDetailPage() {
           <p className="text-sm text-zinc-600 mb-6 leading-relaxed">{product.description}</p>
 
           <div className="flex items-baseline gap-3 mb-6">
-            <span className="text-3xl font-bold text-zinc-900">${Number(product.price).toLocaleString()}</span>
-            {product.original_price && (
+            <span className="text-3xl font-bold text-zinc-900">${currentPrice.toLocaleString()}</span>
+            {product.original_price && !selectedVariation && (
               <span className="text-lg text-zinc-400 line-through">${Number(product.original_price).toLocaleString()}</span>
             )}
             <span className="text-sm text-zinc-500">/{product.unit}</span>
           </div>
+
+          {/* Variation selector */}
+          {product.variations?.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-zinc-700 mb-2">Select Option</h3>
+              <div className="flex flex-wrap gap-2">
+                {product.variations.map((v: any) => {
+                  const isSelected = selectedVariation?.id === v.id
+                  const outOfStock = v.stock <= 0
+                  return (
+                    <button
+                      key={v.id}
+                      disabled={outOfStock}
+                      onClick={() => setSelectedVariation(isSelected ? null : v)}
+                      style={{
+                        padding: '8px 16px', borderRadius: 'var(--radius-md)', cursor: outOfStock ? 'not-allowed' : 'pointer',
+                        fontSize: '13px', fontWeight: 500, fontFamily: 'var(--font-sans)',
+                        border: isSelected ? '2px solid var(--text-primary)' : '1px solid var(--border)',
+                        background: isSelected ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+                        color: outOfStock ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                        opacity: outOfStock ? 0.5 : 1,
+                        transition: 'all 0.12s',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+                      }}
+                    >
+                      <span>{v.name}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                        {v.price_adjustment > 0 ? `+$${Number(v.price_adjustment).toFixed(2)}` : v.price_adjustment < 0 ? `-$${Math.abs(Number(v.price_adjustment)).toFixed(2)}` : ''}
+                        {outOfStock ? ' · Out of stock' : ''}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-4 mb-6">
             <div className="flex items-center border border-zinc-300 rounded-lg overflow-hidden">
@@ -112,7 +171,7 @@ export default function ProductDetailPage() {
               <span className="px-4 py-2 text-sm font-medium text-zinc-900 border-x border-zinc-300 min-w-[40px] text-center">{qty}</span>
               <button onClick={() => setQty(qty + 1)} className="px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100 cursor-pointer">+</button>
             </div>
-            <span className="text-sm text-zinc-500">({product.stock} available)</span>
+            <span className="text-sm text-zinc-500">({currentStock} available)</span>
           </div>
 
           <button
@@ -136,24 +195,6 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* Variations */}
-      {product.variations?.length > 0 && (
-        <div className="mb-10">
-          <h2 className="text-lg font-semibold text-zinc-900 mb-4">Available Variations</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {product.variations.map((v: any) => (
-              <div key={v.id} className="border border-zinc-200 rounded-xl p-4 bg-white">
-                <div className="font-medium text-zinc-900">{v.name}</div>
-                <div className="text-sm text-zinc-500 mt-1">
-                  {v.price_adjustment > 0 ? `+$${Number(v.price_adjustment).toFixed(2)}` : v.price_adjustment < 0 ? `-$${Math.abs(Number(v.price_adjustment)).toFixed(2)}` : 'Standard price'}
-                </div>
-                <div className="text-xs text-zinc-400 mt-1">{v.stock > 0 ? `${v.stock} in stock` : 'Out of stock'}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Add-ons */}
       {product.addOns?.length > 0 && (

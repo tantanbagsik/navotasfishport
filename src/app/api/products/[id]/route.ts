@@ -42,8 +42,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     await sql`DELETE FROM product_variations WHERE product_id = ${id}`
     for (const v of body.variations) {
       await sql`
-        INSERT INTO product_variations (id, product_id, name, price_adjustment, stock, sku_suffix)
-        VALUES (${v.id || `pv${Date.now()}-${Math.random().toString(36).slice(2, 8)}`}, ${id}, ${v.name}, ${v.priceAdjustment || 0}, ${v.stock || 0}, ${v.skuSuffix || ''})
+        INSERT INTO product_variations (id, product_id, name, price_adjustment, stock, sku_suffix, image)
+        VALUES (${v.id || `pv${Date.now()}-${Math.random().toString(36).slice(2, 8)}`}, ${id}, ${v.name}, ${v.priceAdjustment || 0}, ${v.stock || 0}, ${v.skuSuffix || ''}, ${v.image || ''})
       `
     }
   }

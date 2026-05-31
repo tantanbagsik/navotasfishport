@@ -8,6 +8,7 @@ interface Variation {
   priceAdjustment: number
   stock: number
   skuSuffix: string
+  image: string
 }
 
 interface AddOn {
@@ -84,6 +85,7 @@ export default function ProductFormModal({ product, onClose }: ProductFormModalP
         priceAdjustment: Number(v.price_adjustment) || 0,
         stock: v.stock || 0,
         skuSuffix: v.sku_suffix || '',
+        image: v.image || '',
       })),
       addOns: (product.addOns || []).map((a: any) => ({
         id: a.id,
@@ -99,7 +101,7 @@ export default function ProductFormModal({ product, onClose }: ProductFormModalP
     setForm(prev => ({ ...prev, [key]: value }))
 
   const addVariation = () =>
-    update('variations', [...form.variations, { name: '', priceAdjustment: 0, stock: 0, skuSuffix: '' }])
+    update('variations', [...form.variations, { name: '', priceAdjustment: 0, stock: 0, skuSuffix: '', image: '' }])
 
   const removeVariation = (i: number) =>
     update('variations', form.variations.filter((_, idx) => idx !== i))
@@ -280,12 +282,19 @@ export default function ProductFormModal({ product, onClose }: ProductFormModalP
               <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', padding: '8px 0' }}>No variations yet. Add options like size (Small, Medium, Large).</div>
             )}
             {form.variations.map((v, i) => (
-              <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px', padding: '8px 10px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: '0.5px solid var(--border)' }}>
-                <input placeholder="Name (e.g. Large)" value={v.name} onChange={e => updateVariation(i, 'name', e.target.value)} style={{ ...inputStyle, flex: 2 }} />
-                <input type="number" step="0.01" placeholder="Price Adj." value={v.priceAdjustment} onChange={e => updateVariation(i, 'priceAdjustment', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, flex: 1 }} />
-                <input type="number" placeholder="Stock" value={v.stock} onChange={e => updateVariation(i, 'stock', parseInt(e.target.value) || 0)} style={{ ...inputStyle, flex: 1 }} />
-                <input placeholder="SKU suffix" value={v.skuSuffix} onChange={e => updateVariation(i, 'skuSuffix', e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-                <button type="button" onClick={() => removeVariation(i)} style={{ background: 'none', border: 'none', color: 'var(--text-danger)', cursor: 'pointer', fontSize: '16px', padding: '4px' }}>✕</button>
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px', padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: '0.5px solid var(--border)' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input placeholder="Name (e.g. Large)" value={v.name} onChange={e => updateVariation(i, 'name', e.target.value)} style={{ ...inputStyle, flex: 2 }} />
+                  <input type="number" step="0.01" placeholder="Price Adj." value={v.priceAdjustment} onChange={e => updateVariation(i, 'priceAdjustment', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, flex: 1 }} />
+                  <input type="number" placeholder="Stock" value={v.stock} onChange={e => updateVariation(i, 'stock', parseInt(e.target.value) || 0)} style={{ ...inputStyle, flex: 1 }} />
+                  <input placeholder="SKU suffix" value={v.skuSuffix} onChange={e => updateVariation(i, 'skuSuffix', e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                  <button type="button" onClick={() => removeVariation(i)} style={{ background: 'none', border: 'none', color: 'var(--text-danger)', cursor: 'pointer', fontSize: '16px', padding: '4px' }}>✕</button>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input placeholder="Variation image URL (optional)" value={v.image} onChange={e => updateVariation(i, 'image', e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                  <SmallMediaPicker onSelect={(url) => updateVariation(i, 'image', url)} />
+                  {v.image && <img src={v.image} alt="" style={{ height: '32px', width: '32px', borderRadius: '6px', objectFit: 'cover', border: '0.5px solid var(--border)' }} />}
+                </div>
               </div>
             ))}
           </div>
@@ -324,6 +333,56 @@ export default function ProductFormModal({ product, onClose }: ProductFormModalP
         </form>
       </div>
     </div>
+  )
+}
+
+function SmallMediaPicker({ onSelect }: { onSelect: (url: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [media, setMedia] = useState<any[]>([])
+
+  const openPicker = async () => {
+    setOpen(true)
+    const res = await fetch('/api/media')
+    setMedia(await res.json())
+  }
+
+  return (
+    <>
+      <button type="button" onClick={openPicker} style={{
+        fontSize: '10px', padding: '5px 10px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+        border: '0.5px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-secondary)',
+        whiteSpace: 'nowrap',
+      }}>
+        Browse
+      </button>
+      {open && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setOpen(false)}>
+          <div style={{ background: 'var(--bg-primary)', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', maxHeight: '70vh', display: 'flex', flexDirection: 'column', border: '0.5px solid var(--border)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '12px 16px', borderBottom: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Select Image</span>
+              <button onClick={() => setOpen(false)} style={{ width: '24px', height: '24px', borderRadius: '50%', border: 'none', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            </div>
+            <div style={{ padding: '12px', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              {media.filter(m => m.type === 'image').length === 0 ? (
+                <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '24px', color: 'var(--text-tertiary)', fontSize: '11px' }}>No images in media library.</div>
+              ) : (
+                media.filter(m => m.type === 'image').map(m => (
+                  <div key={m.id} onClick={() => { onSelect(m.url); setOpen(false) }} style={{
+                    border: '0.5px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden',
+                    cursor: 'pointer', background: 'var(--bg-secondary)',
+                  }}>
+                    <div style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)' }}>
+                      <img src={m.url} alt={m.filename} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <div style={{ padding: '3px 6px', fontSize: '9px', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.filename}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

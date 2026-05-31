@@ -93,9 +93,11 @@ export async function createTables() {
       name TEXT NOT NULL,
       price_adjustment DECIMAL(10,2) DEFAULT 0,
       stock INTEGER DEFAULT 0,
-      sku_suffix TEXT DEFAULT ''
+      sku_suffix TEXT DEFAULT '',
+      image TEXT DEFAULT ''
     );
   `
+  await sql`ALTER TABLE product_variations ADD COLUMN IF NOT EXISTS image TEXT DEFAULT ''`
 
   await sql`
     CREATE TABLE IF NOT EXISTS product_add_ons (
