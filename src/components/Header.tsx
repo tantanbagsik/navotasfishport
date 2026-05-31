@@ -8,6 +8,7 @@ import { useCart } from '@/context/CartContext'
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/shop', label: 'Shop' },
+  { href: '/reseller-program', label: 'Reseller Program' },
   { href: '/about', label: 'About Us' },
 ]
 
