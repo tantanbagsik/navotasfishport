@@ -2,12 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useCart } from '@/context/CartContext'
 
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/shop', label: 'Shop' },
   { href: '/about', label: 'About Us' },
+]
+
+const categories = [
+  { label: 'All', slug: '' },
+  { label: 'Fresh Fish', slug: 'Fresh Fish' },
+  { label: 'Shrimp & Prawns', slug: 'Shrimp & Prawns' },
+  { label: 'Crabs & Lobsters', slug: 'Crabs & Lobsters' },
+  { label: 'Shellfish', slug: 'Shellfish' },
+  { label: 'Value Packs', slug: 'Value Packs' },
+  { label: 'Smoked & Cured', slug: 'Smoked & Cured' },
 ]
 
 export default function Header() {
@@ -17,6 +28,18 @@ export default function Header() {
   const [loggedIn, setLoggedIn] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const router = useRouter()
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
+      setSearchQuery('')
+      setSearchOpen(false)
+    }
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token')
@@ -81,6 +104,25 @@ export default function Header() {
               </Link>
             ))}
           </nav>
+
+          <div className="hidden md:flex items-center">
+            <form onSubmit={handleSearch} className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
+                placeholder="Search products..."
+                className="w-40 lg:w-56 pl-9 pr-3 py-1.5 text-sm border border-zinc-300 rounded-full bg-zinc-50 outline-none focus:border-zinc-500 focus:bg-white transition-colors"
+              />
+              <button type="submit" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              </button>
+            </form>
+          </div>
 
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -225,6 +267,20 @@ export default function Header() {
               </svg>
             </button>
           </div>
+        </div>
+      </div>
+
+      <div className="hidden md:block border-t border-zinc-100 bg-zinc-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1 overflow-x-auto py-1.5">
+          {categories.map(cat => (
+            <Link
+              key={cat.label}
+              href={cat.slug ? `/shop?category=${encodeURIComponent(cat.slug)}` : '/shop'}
+              className="text-xs font-medium text-zinc-500 hover:text-sky-600 hover:bg-white px-3 py-1.5 rounded-full transition-colors whitespace-nowrap"
+            >
+              {cat.label}
+            </Link>
+          ))}
         </div>
       </div>
 
