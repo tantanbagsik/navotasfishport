@@ -22,6 +22,27 @@ export default function HomePage() {
 
       <CategorySection />
 
+      {/* ── Marketplace Promo ── */}
+      <section className="py-12 bg-gradient-to-r from-sky-600 to-sky-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Multi-Store Marketplace</h2>
+              <p className="text-sky-100 text-sm mt-1">Browse our network of trusted seafood resellers</p>
+            </div>
+            <Link
+              href="/marketplace"
+              className="inline-flex items-center gap-2 bg-white text-sky-700 font-semibold px-6 py-2.5 rounded-full hover:bg-sky-50 transition-all text-sm shadow-lg"
+            >
+              Visit Marketplace
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <div>

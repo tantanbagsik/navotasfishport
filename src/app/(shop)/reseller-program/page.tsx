@@ -1,6 +1,42 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+
 export default function ResellerProgramPage() {
+  const [showForm, setShowForm] = useState(false)
+  const [formData, setFormData] = useState({ storeName: '', ownerName: '', email: '', phone: '', city: '', description: '' })
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setError('')
+    try {
+      const res = await fetch('/api/resellers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeName: formData.storeName,
+          ownerName: formData.ownerName,
+          email: formData.email,
+          phone: formData.phone,
+          city: formData.city,
+          description: formData.description,
+          specialties: ['Fresh Fish'],
+          website: `${formData.storeName?.toLowerCase().replace(/\s+/g, '')}.vercel.app`,
+        }),
+      })
+      if (!res.ok) throw new Error('Failed to submit')
+      setSubmitted(true)
+      setShowForm(false)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
   return (
     <div className="min-h-screen">
       {/* ── Hero ── */}
@@ -21,13 +57,13 @@ export default function ResellerProgramPage() {
               Buy in bulk at true fishport prices and unlock huge profit margins. Plus: get your own branded website and mobile app, and be listed on our multi-store marketplace.
             </p>
             <div className="flex flex-wrap gap-4">
-              <a href="#get-started" className="inline-flex items-center gap-2 bg-white text-sky-900 font-bold px-8 py-3.5 rounded-full hover:bg-sky-50 transition-all shadow-xl hover:shadow-2xl">
+              <a href="#get-started" onClick={(e) => { e.preventDefault(); setShowForm(true); }} className="inline-flex items-center gap-2 bg-white text-sky-900 font-bold px-8 py-3.5 rounded-full hover:bg-sky-50 transition-all shadow-xl hover:shadow-2xl">
                 Get Wholesale Access
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </a>
-              <a href="#how-it-works" className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 text-white font-semibold px-8 py-3.5 rounded-full hover:bg-white/20 transition-all">
+              <a href="#get-started" onClick={(e) => { e.preventDefault(); setShowForm(true); }} className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 text-white font-semibold px-8 py-3.5 rounded-full hover:bg-white/20 transition-all">
                 Book a 10-Minute Demo
               </a>
             </div>
@@ -204,6 +240,70 @@ export default function ResellerProgramPage() {
         </div>
       </section>
 
+      {/* ── Application Form Modal ── */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 pb-0">
+              <h3 className="text-lg font-bold text-zinc-900">Wholesale Access Application</h3>
+              <button onClick={() => setShowForm(false)} className="p-1 text-zinc-400 hover:text-zinc-600 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">Store Name *</label>
+                  <input required value={formData.storeName} onChange={e => setFormData({ ...formData, storeName: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400" />
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">Your Name *</label>
+                  <input required value={formData.ownerName} onChange={e => setFormData({ ...formData, ownerName: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">Email *</label>
+                  <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">Phone</label>
+                  <input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">City</label>
+                  <input value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">Tell us about your business</label>
+                  <textarea rows={3} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 resize-none" placeholder="Target volumes, preferred species..." />
+                </div>
+              </div>
+              {error && <p className="text-xs text-red-500">{error}</p>}
+              <button type="submit" disabled={submitting} className="w-full bg-sky-600 text-white font-semibold py-3 rounded-xl hover:bg-sky-700 disabled:opacity-50 transition-colors">
+                {submitting ? 'Submitting...' : 'Submit Application'}
+              </button>
+              <p className="text-[11px] text-zinc-400 text-center">We'll review and get back to you within 24 hours.</p>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Success Toast ── */}
+      {submitted && (
+        <div className="fixed bottom-6 right-6 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-xl text-sm font-semibold flex items-center gap-2 animate-slide-in">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+          Application submitted! We'll contact you soon.
+          <button onClick={() => setSubmitted(false)} className="ml-2 hover:text-green-200">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* ── Final CTA ── */}
       <section id="get-started" className="py-20 bg-gradient-to-br from-sky-950 via-sky-900 to-sky-800 text-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -218,13 +318,13 @@ export default function ResellerProgramPage() {
             New Seller Launch Offer: Free storefront setup + first-month marketplace fees waived.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <button className="inline-flex items-center gap-2 bg-white text-sky-900 font-bold px-8 py-3.5 rounded-full hover:bg-sky-50 transition-all shadow-xl hover:shadow-2xl">
+            <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 bg-white text-sky-900 font-bold px-8 py-3.5 rounded-full hover:bg-sky-50 transition-all shadow-xl hover:shadow-2xl">
               Get Wholesale Access
             </button>
-            <button className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 text-white font-semibold px-8 py-3.5 rounded-full hover:bg-white/20 transition-all">
+            <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 text-white font-semibold px-8 py-3.5 rounded-full hover:bg-white/20 transition-all">
               See Pricing
             </button>
-            <button className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 text-white font-semibold px-8 py-3.5 rounded-full hover:bg-white/20 transition-all">
+            <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 text-white font-semibold px-8 py-3.5 rounded-full hover:bg-white/20 transition-all">
               Book a Demo
             </button>
           </div>

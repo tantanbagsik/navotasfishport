@@ -179,6 +179,29 @@ export async function createTables() {
     );
   `
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS resellers (
+      id TEXT PRIMARY KEY,
+      store_name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      owner_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      description TEXT DEFAULT '',
+      logo TEXT DEFAULT '',
+      cover_image TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      city TEXT DEFAULT '',
+      website TEXT DEFAULT '',
+      specialties TEXT[] DEFAULT '{}',
+      status TEXT DEFAULT 'active',
+      has_app BOOLEAN DEFAULT true,
+      products_count INTEGER DEFAULT 0,
+      rating DECIMAL(3,2) DEFAULT 0,
+      joined_at TIMESTAMP DEFAULT NOW()
+    );
+  `
+
   console.log('Tables created successfully')
 }
 
@@ -252,6 +275,18 @@ export async function seedData() {
       ('cust2', 'james@example.com', 'customer123', 'James Okonkwo', 'customer', '+2348012345678')
     ON CONFLICT (email) DO NOTHING
   `
+
+  const existingResellers = await sql`SELECT COUNT(*) FROM resellers`
+  if (existingResellers[0].count === 0) {
+    await sql`
+      INSERT INTO resellers (id, store_name, slug, owner_name, email, phone, description, logo, specialties, products_count, rating, city, website, has_app) VALUES
+        ('r1', 'Alimango Direct', 'alimango-direct', 'Carlos Reyes', 'carlos@alimangodirect.com', '+639178901234', 'Specializing in premium mud crabs and lobsters sourced directly from Navotas Port. We deliver live seafood across Metro Manila.', 'https://images.unsplash.com/photo-1563120094-5f6b8c3cac2c?w=200&h=200&fit=crop', ARRAY['Crabs', 'Lobsters', 'Shellfish'], 24, 4.7, 'Navotas', 'https://alimangodirect.vercel.app', true),
+        ('r2', 'Ocean Fresh PH', 'ocean-fresh-ph', 'Maria Santos', 'maria@oceanfresh.ph', '+639281234567', 'Daily catch seafood supplier for restaurants and hotels. Fresh fish, shrimp, and premium cuts with cold-chain delivery.', 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=200&h=200&fit=crop', ARRAY['Fresh Fish', 'Shrimp', 'Tuna'], 48, 4.9, 'Manila', 'https://oceanfresh.vercel.app', true),
+        ('r3', 'Port Catch Trading', 'port-catch-trading', 'Jun Hernandez', 'jun@portcatch.com', '+639384567890', 'Bulk seafood trading company. We supply wet markets, restaurants, and exporters with consistent volume and quality.', 'https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=200&h=200&fit=crop', ARRAY['Value Packs', 'Fresh Fish', 'Squid'], 36, 4.5, 'Navotas', 'https://portcatch.vercel.app', true),
+        ('r4', 'Seafood Hub Express', 'seafood-hub-express', 'Aiko Tanaka', 'aiko@seafoodhub.com', '+639487123456', 'Premium seafood delivery with a focus on Japanese-grade tuna, salmon, and specialty cuts for fine dining.', 'https://images.unsplash.com/photo-1599084993091-1cb5c07d2e1e?w=200&h=200&fit=crop', ARRAY['Tuna', 'Salmon', 'Shellfish'], 32, 4.8, 'Makati', 'https://seafoodhub.vercel.app', true),
+        ('r5', 'Baybay Seafoods', 'baybay-seafoods', 'Lena Müller', 'lena@baybayseafoods.com', '+639581234789', 'Sustainable seafood from local waters. We offer smoked and cured specialties alongside fresh daily catches.', 'https://images.unsplash.com/photo-1564049489317-60d5ff2f6e10?w=200&h=200&fit=crop', ARRAY['Smoked & Cured', 'Fresh Fish', 'Dried Fish'], 18, 4.6, 'Parañaque', 'https://baybay.vercel.app', true)
+    `
+  }
 
   console.log('Data seeded successfully')
 }
