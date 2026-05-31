@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/context/CartContext'
@@ -32,14 +32,54 @@ export default function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searching, setSearching] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
-  const handleSearch = (e: React.FormEvent) => {
+  // Debounced search
+  useEffect(() => {
+    if (!searchOpen || !searchQuery.trim()) { setSearchResults([]); return }
+    const timer = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery.trim())}`)
+        const data = await res.json()
+        setSearchResults(data.slice(0, 6))
+      } catch {} finally { setSearching(false) }
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [searchQuery, searchOpen])
+
+  // Close on click outside
+  useEffect(() => {
+    if (!searchOpen) return
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) closeSearch()
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [searchOpen])
+
+  // Close on Escape
+  useEffect(() => {
+    if (!searchOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeSearch() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [searchOpen])
+
+  // Focus input when opened
+  useEffect(() => { if (searchOpen) setTimeout(() => inputRef.current?.focus(), 100) }, [searchOpen])
+
+  const closeSearch = () => { setSearchOpen(false); setSearchQuery(''); setSearchResults([]) }
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
       router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
-      setSearchQuery('')
-      setSearchOpen(false)
+      closeSearch()
     }
   }
 
@@ -107,24 +147,15 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center">
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                onFocus={() => setSearchOpen(true)}
-                onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
-                placeholder="Search products..."
-                className="w-40 lg:w-56 pl-9 pr-3 py-1.5 text-sm border border-zinc-300 rounded-full bg-zinc-50 outline-none focus:border-zinc-500 focus:bg-white transition-colors"
-              />
-              <button type="submit" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-              </button>
-            </form>
-          </div>
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="p-2 text-zinc-500 hover:text-sky-600 transition-colors"
+            title="Search products"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          </button>
 
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -271,6 +302,95 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* ── Search Overlay ── */}
+      {searchOpen && (
+        <div className="absolute inset-0 z-50 flex items-start justify-center pt-4 px-4" style={{ background: 'rgba(0,0,0,0.4)', minHeight: '100vh', position: 'fixed', top: 0, left: 0, right: 0 }}>
+          <div ref={searchRef} className="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-zinc-200 overflow-hidden mt-16">
+            <form onSubmit={handleSearchSubmit} className="flex items-center gap-3 px-5 py-3.5 border-b border-zinc-100">
+              <svg className="w-5 h-5 text-zinc-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search products, categories, seafood..."
+                className="flex-1 text-sm outline-none text-zinc-900 placeholder:text-zinc-400"
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery('')} className="p-1 text-zinc-300 hover:text-zinc-500">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+              <button type="button" onClick={closeSearch} className="text-xs font-medium text-zinc-400 hover:text-zinc-600 bg-zinc-100 hover:bg-zinc-200 px-3 py-1.5 rounded-lg transition-colors">
+                Esc
+              </button>
+            </form>
+
+            <div className="max-h-96 overflow-y-auto">
+              {searching && (
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-zinc-400">
+                  <div className="w-4 h-4 border-2 border-zinc-300 border-t-sky-600 rounded-full animate-spin" />
+                  Searching...
+                </div>
+              )}
+              {!searching && searchQuery && searchResults.length === 0 && (
+                <div className="py-10 text-center text-sm text-zinc-400">
+                  No products found for "<span className="text-zinc-600 font-medium">{searchQuery}</span>"
+                </div>
+              )}
+              {!searching && searchResults.map(p => (
+                <Link
+                  key={p.id}
+                  href={`/shop/${p.id}`}
+                  onClick={closeSearch}
+                  className="flex items-center gap-4 px-5 py-3 hover:bg-zinc-50 transition-colors border-b border-zinc-50 last:border-0"
+                >
+                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-100 flex-shrink-0 border border-zinc-100">
+                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-zinc-900 truncate">{p.name}</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-sm font-semibold text-sky-700">₱{Number(p.price).toLocaleString()}</span>
+                      <span className="text-[10px] text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded">{p.category}</span>
+                      {p.stock > 0 ? (
+                        <span className="text-[10px] text-green-600">In Stock</span>
+                      ) : (
+                        <span className="text-[10px] text-red-400">Out of Stock</span>
+                      )}
+                    </div>
+                  </div>
+                  <svg className="w-4 h-4 text-zinc-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+              ))}
+              {!searching && !searchQuery && (
+                <div className="py-8 text-center">
+                  <div className="text-3xl mb-3">🔍</div>
+                  <div className="text-sm text-zinc-500 font-medium mb-1">Search Our Seafood Catalog</div>
+                  <div className="text-xs text-zinc-400">Type to search across all products, categories, and more</div>
+                </div>
+              )}
+            </div>
+
+            {searchResults.length > 0 && searchQuery && (
+              <Link
+                href={`/shop?search=${encodeURIComponent(searchQuery.trim())}`}
+                onClick={closeSearch}
+                className="block text-center text-sm font-medium text-sky-600 hover:text-sky-700 hover:bg-sky-50 py-3 border-t border-zinc-100 transition-colors"
+              >
+                View all {searchResults.length}+ results
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="hidden md:block border-t border-zinc-100 bg-zinc-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1 overflow-x-auto py-1.5">
