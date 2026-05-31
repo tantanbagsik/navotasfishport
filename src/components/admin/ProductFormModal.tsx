@@ -33,6 +33,7 @@ interface ProductFormData {
   isBestSeller: boolean
   isNew: boolean
   tags: string
+  videoUrl: string
   variations: Variation[]
   addOns: AddOn[]
 }
@@ -54,7 +55,7 @@ export default function ProductFormModal({ product, onClose }: ProductFormModalP
     name: '', description: '', price: 0, originalPrice: null,
     category: categories[0], image: '', unit: 'kg', weight: '1 kg',
     stock: 0, sku: '', isOnSale: false, isBestSeller: false, isNew: false,
-    tags: '', variations: [], addOns: [],
+    tags: '', videoUrl: '', variations: [], addOns: [],
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -76,6 +77,7 @@ export default function ProductFormModal({ product, onClose }: ProductFormModalP
       isBestSeller: !!product.is_best_seller,
       isNew: !!product.is_new,
       tags: product.tags?.join(', ') || '',
+      videoUrl: product.video_url || '',
       variations: (product.variations || []).map((v: any) => ({
         id: v.id,
         name: v.name || '',
@@ -228,8 +230,24 @@ export default function ProductFormModal({ product, onClose }: ProductFormModalP
               <input value={form.weight} onChange={e => update('weight', e.target.value)} style={inputStyle} />
             </div>
             <div style={{ gridColumn: 'span 2' }}>
-              <label style={labelStyle}>Image URL</label>
-              <input value={form.image} onChange={e => update('image', e.target.value)} style={inputStyle} />
+              <label style={labelStyle}>Product Image</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input value={form.image} onChange={e => update('image', e.target.value)} style={{ ...inputStyle, flex: 1 }} placeholder="https://..." />
+                <MediaPickerButton onSelect={(url) => update('image', url)} />
+              </div>
+              {form.image && <img src={form.image} alt="preview" style={{ marginTop: '6px', height: '60px', borderRadius: 'var(--radius-md)', objectFit: 'cover' }} />}
+            </div>
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={labelStyle}>Product Video (optional)</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input value={form.videoUrl} onChange={e => update('videoUrl', e.target.value)} style={{ ...inputStyle, flex: 1 }} placeholder="https://youtube.com/watch?v=... or direct video URL" />
+                <MediaPickerButton onSelect={(url) => update('videoUrl', url)} />
+              </div>
+              {form.videoUrl && (
+                <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                  {form.videoUrl.includes('youtube') || form.videoUrl.includes('youtu.be') ? 'YouTube video linked' : 'Video URL linked'}
+                </div>
+              )}
             </div>
             <div style={{ gridColumn: 'span 2' }}>
               <label style={labelStyle}>Tags (comma-separated)</label>
@@ -306,5 +324,74 @@ export default function ProductFormModal({ product, onClose }: ProductFormModalP
         </form>
       </div>
     </div>
+  )
+}
+
+function MediaPickerButton({ onSelect }: { onSelect: (url: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [media, setMedia] = useState<any[]>([])
+  const [tab, setTab] = useState<'image' | 'video'>('image')
+
+  const openPicker = async () => {
+    setOpen(true)
+    const res = await fetch('/api/media')
+    setMedia(await res.json())
+  }
+
+  return (
+    <>
+      <button type="button" onClick={openPicker} style={{
+        fontSize: '11px', padding: '7px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+        border: '0.5px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)',
+        whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px',
+      }}>
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <rect x="1" y="3" width="22" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="M1 15l5-5 4 4 4-4 5 5" />
+        </svg>
+        Browse Media
+      </button>
+
+      {open && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setOpen(false)}>
+          <div style={{ background: 'var(--bg-primary)', borderRadius: 'var(--radius-lg)', maxWidth: '560px', width: '100%', maxHeight: '80vh', display: 'flex', flexDirection: 'column', border: '0.5px solid var(--border)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '14px 18px', borderBottom: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>Select Media</span>
+              <button onClick={() => setOpen(false)} style={{ width: '28px', height: '28px', borderRadius: '50%', border: 'none', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            </div>
+            <div style={{ padding: '10px 14px', display: 'flex', gap: '4px' }}>
+              {(['image', 'video'] as const).map(t => (
+                <button key={t} onClick={() => setTab(t)} style={{
+                  padding: '4px 12px', fontSize: '11px', fontWeight: 600, borderRadius: 'var(--radius-md)',
+                  border: 'none', cursor: 'pointer', textTransform: 'capitalize',
+                  background: tab === t ? 'var(--bg-tertiary)' : 'transparent',
+                  color: tab === t ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                }}>{t}s</button>
+              ))}
+            </div>
+            <div style={{ padding: '14px', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+              {media.filter(m => m.type === tab).length === 0 ? (
+                <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '30px', color: 'var(--text-tertiary)', fontSize: '12px' }}>No {tab} files in media library.</div>
+              ) : (
+                media.filter(m => m.type === tab).map(m => (
+                  <div key={m.id} onClick={() => { onSelect(m.url); setOpen(false) }} style={{
+                    border: '0.5px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden',
+                    cursor: 'pointer', background: 'var(--bg-secondary)', transition: 'all 0.15s',
+                  }} className="hover:border-sky-400">
+                    <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)' }}>
+                      {m.type === 'video' ? (
+                        <svg className="w-6 h-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" /></svg>
+                      ) : (
+                        <img src={m.url} alt={m.filename} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      )}
+                    </div>
+                    <div style={{ padding: '4px 6px', fontSize: '10px', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.filename}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

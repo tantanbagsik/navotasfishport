@@ -21,6 +21,7 @@ export async function createTables() {
       is_best_seller BOOLEAN DEFAULT false,
       is_new BOOLEAN DEFAULT false,
       tags TEXT[] DEFAULT '{}',
+      video_url TEXT DEFAULT '',
       created_at TIMESTAMP DEFAULT NOW()
     );
   `
@@ -46,6 +47,7 @@ export async function createTables() {
   `
 
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_number TEXT DEFAULT ''`
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT ''`
 
   await sql`
     CREATE TABLE IF NOT EXISTS order_items (
@@ -199,6 +201,18 @@ export async function createTables() {
       products_count INTEGER DEFAULT 0,
       rating DECIMAL(3,2) DEFAULT 0,
       joined_at TIMESTAMP DEFAULT NOW()
+    );
+  `
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS media (
+      id TEXT PRIMARY KEY,
+      filename TEXT NOT NULL,
+      url TEXT NOT NULL,
+      type TEXT NOT NULL DEFAULT 'image',
+      alt TEXT DEFAULT '',
+      size INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `
 

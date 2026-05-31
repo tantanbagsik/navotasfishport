@@ -31,7 +31,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       sku = COALESCE(${body.sku}, sku),
       is_on_sale = COALESCE(${body.isOnSale}, is_on_sale),
       is_best_seller = COALESCE(${body.isBestSeller}, is_best_seller),
-      is_new = COALESCE(${body.isNew}, is_new)
+      is_new = COALESCE(${body.isNew}, is_new),
+      video_url = COALESCE(${body.videoUrl}, video_url)
     WHERE id = ${id}
     RETURNING *
   `

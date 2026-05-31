@@ -44,8 +44,8 @@ export async function POST(request: Request) {
   const slug = body.slug || body.name?.toLowerCase().replace(/\s+/g, '-')
 
   const result = await sql`
-    INSERT INTO products (id, name, slug, description, price, original_price, category, image, unit, weight, stock, sku, is_on_sale, is_best_seller, is_new, tags)
-    VALUES (${productId}, ${body.name}, ${slug}, ${body.description || ''}, ${body.price}, ${body.originalPrice || null}, ${body.category}, ${body.image || ''}, ${body.unit || 'kg'}, ${body.weight || '1 kg'}, ${body.stock || 0}, ${body.sku || ''}, ${body.isOnSale || false}, ${body.isBestSeller || false}, ${body.isNew || false}, ${body.tags || []})
+    INSERT INTO products (id, name, slug, description, price, original_price, category, image, unit, weight, stock, sku, is_on_sale, is_best_seller, is_new, tags, video_url)
+    VALUES (${productId}, ${body.name}, ${slug}, ${body.description || ''}, ${body.price}, ${body.originalPrice || null}, ${body.category}, ${body.image || ''}, ${body.unit || 'kg'}, ${body.weight || '1 kg'}, ${body.stock || 0}, ${body.sku || ''}, ${body.isOnSale || false}, ${body.isBestSeller || false}, ${body.isNew || false}, ${body.tags || []}, ${body.videoUrl || ''})
     RETURNING *
   `
 

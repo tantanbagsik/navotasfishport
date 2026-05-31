@@ -14,6 +14,7 @@ export default function ProductDetailPage() {
   const [related, setRelated] = useState<any[]>([])
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
+  const [showVideo, setShowVideo] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -44,9 +45,39 @@ export default function ProductDetailPage() {
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
-        <div className="rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-50">
-          <img src={product.image} alt={product.name} className="w-full h-80 md:h-96 object-cover" />
-        </div>
+        <div>
+          <div className="rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-50 relative">
+            {product.video_url && (
+              <div className="absolute top-3 left-3 z-10 flex gap-2">
+                <button
+                  onClick={() => setShowVideo(false)}
+                  className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${!showVideo ? 'bg-zinc-900 text-white' : 'bg-white/80 text-zinc-600 hover:bg-white'}`}
+                >Photo</button>
+                <button
+                  onClick={() => setShowVideo(true)}
+                  className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${showVideo ? 'bg-zinc-900 text-white' : 'bg-white/80 text-zinc-600 hover:bg-white'}`}
+                >Video</button>
+              </div>
+            )}
+            {showVideo && product.video_url ? (
+              product.video_url.includes('youtube') || product.video_url.includes('youtu.be') ? (
+                <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                  <iframe
+                    src={`https://www.youtube.com/embed/${product.video_url.split('v=')[1]?.split('&')[0] || product.video_url.split('/').pop()}`}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <video controls className="w-full h-80 md:h-96 object-cover">
+                  <source src={product.video_url} />
+                </video>
+              )
+            ) : (
+              <img src={product.image} alt={product.name} className="w-full h-80 md:h-96 object-cover" />
+            )}
+          </div>
+          </div>
 
         <div>
           <div className="flex items-center gap-3 mb-2">
