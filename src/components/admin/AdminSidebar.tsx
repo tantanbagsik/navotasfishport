@@ -11,6 +11,7 @@ const navItems = [
   { section: 'Commerce', items: [
     { href: '/admin/orders', label: 'Orders', icon: 'box', badge: 12 },
     { href: '/admin/products', label: 'Products', icon: 'package' },
+    { href: '/admin/bulk-import', label: 'Bulk Import', icon: 'upload' },
     { href: '/admin/media', label: 'Media Library', icon: 'image' },
     { href: '/admin/inventory', label: 'Inventory', icon: 'list', badge: 3 },
     { href: '/admin/customers', label: 'Customers', icon: 'users' },
@@ -45,6 +46,7 @@ const icons: Record<string, React.ReactNode> = {
   integrations: <svg className="nav-icon w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="5" cy="5" r="2"/><circle cx="11" cy="11" r="2"/><path d="M5 7v2a4 4 0 004 4"/></svg>,
   audit: <svg className="nav-icon w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M5 7h6M5 10h4"/><rect x="1" y="2" width="14" height="12" rx="2"/><path d="M5 4h6"/></svg>,
   image: <svg className="nav-icon w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="1" y="2" width="14" height="12" rx="1.5"/><circle cx="6" cy="6" r="1.5"/><path d="M1 12l4-4 3 3 2-2 4 4"/></svg>,
+  upload: <svg className="nav-icon w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V3M4 7l4-4 4 4M2 12v2h12v-2"/></svg>,
 }
 
 export default function AdminSidebar({ mobileOpen, onCloseMobile }: { mobileOpen?: boolean; onCloseMobile?: () => void }) {
